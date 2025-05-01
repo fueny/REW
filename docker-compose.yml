@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    container_name: vocabulary-app
+    restart: always
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./instance:/app/instance
+    environment:
+      - FLASK_DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-default_dev_key}
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    container_name: vocabulary-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./static:/app/static
+    depends_on:
+      - web
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
