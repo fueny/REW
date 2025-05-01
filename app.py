@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timedelta
 from flask import Flask, session, request
 from utils.config import Config
+from utils.logging_config import setup_logging
 from models.database import Database
 from controllers.vocabulary_controller import VocabularyController
 from controllers.auth_controller import AuthController, login_required
@@ -19,8 +20,16 @@ def create_app():
     # 初始化应用配置
     Config.init_app(app)
 
+    # 设置日志
+    setup_logging(app)
+
     # 设置会话密钥
-    app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
+    # 在生产环境中，应该设置一个固定的密钥通过环境变量
+    # 如果环境变量不存在，则使用随机密钥（开发环境）
+    app.secret_key = os.environ.get('SECRET_KEY')
+    if not app.secret_key:
+        app.logger.warning('未设置SECRET_KEY环境变量，使用随机密钥。这在生产环境中不推荐。')
+        app.secret_key = os.urandom(24)
 
     # 初始化数据库
     db.init_app(app)

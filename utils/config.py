@@ -11,12 +11,15 @@ class Config:
     def init_app(app):
         """初始化应用配置"""
         # 基本配置
-        app.config['UPLOAD_FOLDER'] = os.path.normpath('uploads')
+        # 在生产环境中使用绝对路径
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER', os.path.join(base_dir, 'uploads'))
         app.config['ALLOWED_EXTENSIONS'] = {'xlsx', 'xls'}
         app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
         # 数据库配置
-        app.config['DATABASE_PATH'] = os.path.normpath(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'vocabulary.db'))
+        app.config['DATABASE_PATH'] = os.environ.get('DATABASE_PATH',
+                                                    os.path.join(base_dir, 'instance', 'vocabulary.db'))
 
         # 确保上传文件夹和数据库目录存在
         os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
