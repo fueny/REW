@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>词汇卡片学习</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- 添加字体图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>词汇卡片学习</h1>
+
+        <!-- 用户信息 -->
+        <div class="user-info">
+            {% if username %}
+                <span class="welcome-message">欢迎，{{ username }}</span>
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> 登出
+                </a>
+            {% else %}
+                <a href="{{ url_for('login_page') }}" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </a>
+                <a href="{{ url_for('register_page') }}" class="register-btn">
+                    <i class="fas fa-user-plus"></i> 注册
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- 移动端导航菜单 -->
+        <div class="mobile-nav">
+            <button id="mobile-menu-btn" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-nav-title">背单词</div>
+            <button id="mobile-history-btn" class="mobile-history-btn">
+                <i class="fas fa-history"></i>
+            </button>
+        </div>
+
+        <!-- 警告提示框 -->
+        <div id="alert-container" class="alert-container"></div>
+
+        <!-- 自定义模态对话框 -->
+        <div id="custom-modal" class="custom-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">提示</h3>
+                    <span class="modal-close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-message"></p>
+                </div>
+                <div class="modal-footer">
+                    <button id="modal-cancel-btn" class="modal-btn modal-cancel-btn">取消</button>
+                    <button id="modal-confirm-btn" class="modal-btn modal-confirm-btn">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="three-column-layout">
+            <!-- 左侧面板：当前文件信息和上传功能 -->
+            <div class="left-sidebar">
+                <!-- 当前文件信息 -->
+                <div class="current-file-section">
+                    <h3>当前词汇表</h3>
+                    <div class="current-file-info">
+                        <span class="current-file-name">{{ current_file.display_name }}</span>
+                        <button id="switch-file-btn" class="action-btn">切换词汇表</button>
+                        <button id="load-last-file-btn" class="action-btn" title="加载上次使用的文件">
+                            <i class="fas fa-file-import"></i> 加载上次文件
+                        </button>
+                    </div>
+                    <div id="file-list-container" class="file-list-container hidden">
+                        <div class="file-list" id="file-list">
+                            <!-- 文件列表将通过JavaScript动态加载 -->
+                            <div class="loading">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件上传表单 -->
+                <div class="upload-section">
+                    <h3>上传自定义词汇表</h3>
+                    <form id="upload-form" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <input type="file" name="file" id="file" accept=".xlsx,.xls">
+                            <button type="button" id="upload-btn" class="upload-btn">上传</button>
+                        </div>
+                        <p class="upload-note">请上传包含以下列的Excel文件：编号, 单词, 音标, 释义, 拆分, 综合法, 联想法</p>
+                    </form>
+                </div>
+
+                <!-- 学习进度信息 -->
+                <div class="progress-controls">
+                    <h3>学习进度</h3>
+                    <div class="progress-info">
+                        <p><i class="fas fa-info-circle"></i> 学习进度会自动保存，无需手动操作</p>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- 中间区域：卡片显示 -->
+            <div class="main-content">
+                <!-- 卡片区域 -->
+                <div class="card-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <span id="card-number" class="card-number"></span>
+                            <h2 id="card-word" class="card-word"></h2>
+                            <p id="card-phonetic" class="card-phonetic"></p>
+                        </div>
+
+                        <div id="card-details" class="card-details hidden">
+                            <div class="detail-item">
+                                <h3>释义</h3>
+                                <p id="card-meaning"></p>
+                            </div>
+                            <div class="detail-item">
+                                <h3>拆分</h3>
+                                <p id="card-split"></p>
+                            </div>
+                            <div class="detail-item">
+                                <h3>综合法</h3>
+                                <p id="card-synthesis"></p>
+                            </div>
+                            <div class="detail-item">
+                                <h3>联想法</h3>
+                                <p id="card-association"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-controls">
+                        <button id="prev-btn" class="nav-btn">
+                            <span><i class="fas fa-chevron-left"></i> 上一张</span>
+                        </button>
+                        <button id="toggle-details-btn" class="toggle-btn">
+                            <span><i class="fas fa-eye"></i> 显示详细信息</span>
+                        </button>
+                        <button id="next-btn" class="nav-btn">
+                            <span>下一张 <i class="fas fa-chevron-right"></i></span>
+                        </button>
+                    </div>
+
+                    <div class="card-position">
+                        <span id="current-position">1</span> / <span id="total-cards">{{ cards|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧面板：浏览历史 -->
+            <div class="right-sidebar">
+                <div class="history-section">
+                    <h3>浏览历史</h3>
+                    <div id="history-container" class="history-container">
+                        <!-- 历史记录将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 将数据从Flask传递给JavaScript -->
+    <script>
+        const cardsData = {{ cards|tojson|safe }};
+        const currentFile = {{ current_file|tojson|safe }};
+    </script>
+    <!-- 按功能分治的JavaScript文件 -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/storage.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/card.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/history.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/file.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/archive.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+</body>
+</html>
