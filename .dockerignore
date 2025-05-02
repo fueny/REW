@@ -1,0 +1,67 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 数据和上传文件
+instance/
+uploads/
+
+# 日志
+*.log
+logs/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+docker-deploy.sh
+
+# 部署相关（不需要复制到容器中）
+deploy.sh
+REW.service
+REW_nginx.conf
+start.sh
+nginx/ssl/
+
+# 其他
+.DS_Store
+Thumbs.db
+*.bak
+tmp/
+temp/
+.env
+.env.example

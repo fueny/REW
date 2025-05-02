@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: vocabulary-app
+    restart: always
+    # 不需要暴露5050端口，只通过nginx访问
+    # ports:
+    #   - "5050:5050"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./instance:/app/instance
+    environment:
+      - FLASK_DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-default_dev_key}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - vocabulary-network
+
+  nginx:
+    image: nginx:1.22
+    container_name: vocabulary-nginx
+    restart: always
+    # 使用内部端口，由外部Nginx反向代理访问
+    ports:
+      - "127.0.0.1:8080:80"  # 仅本地访问的HTTP端口
+      - "127.0.0.1:8443:443"  # 仅本地访问的HTTPS端口
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./static:/app/static:ro
+      - ./uploads:/app/uploads:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro  # SSL证书（可选）
+    depends_on:
+      - web
+    networks:
+      - vocabulary-network
+
+networks:
+  vocabulary-network:
+    driver: bridge
