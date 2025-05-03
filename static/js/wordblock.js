@@ -46,8 +46,18 @@ function generateWordBlocks() {
         block.textContent = `${startIndex + 1}-${endIndex + 1}`;
 
         // 添加点击事件，显示词汇弹出窗口
-        block.addEventListener('click', () => {
+        block.addEventListener('click', (event) => {
+            event.preventDefault(); // 防止默认行为
             showVocabularyModal(startIndex, endIndex);
+        });
+
+        // 添加触摸事件，增强移动端体验
+        block.addEventListener('touchstart', () => {
+            block.style.opacity = '0.8'; // 触摸时的视觉反馈
+        });
+
+        block.addEventListener('touchend', () => {
+            block.style.opacity = '1'; // 恢复正常状态
         });
 
         // 将词汇块添加到容器
@@ -100,11 +110,21 @@ function showVocabularyModal(startIndex, endIndex) {
         item.appendChild(phonetic);
 
         // 添加点击事件，点击时跳转到对应的卡片
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (event) => {
+            event.preventDefault(); // 防止默认行为
             // 关闭弹出窗口
             modal.classList.remove('active');
             // 跳转到对应卡片
             jumpToCard(i);
+        });
+
+        // 添加触摸事件，增强移动端体验
+        item.addEventListener('touchstart', () => {
+            item.style.backgroundColor = '#e9ecef'; // 触摸时的视觉反馈
+        });
+
+        item.addEventListener('touchend', () => {
+            item.style.backgroundColor = '#f8f9fa'; // 恢复正常状态
         });
 
         // 将词汇项添加到列表容器

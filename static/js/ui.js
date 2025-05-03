@@ -92,12 +92,12 @@ function toggleMobileMenu() {
     const leftSidebar = document.querySelector('.left-sidebar');
 
     // 切换左侧边栏的显示/隐藏
-    leftSidebar.classList.toggle('mobile-visible');
+    leftSidebar.classList.toggle('active');
 
     // 如果右侧边栏是可见的，隐藏它
     const rightSidebar = document.querySelector('.right-sidebar');
-    if (rightSidebar.classList.contains('mobile-visible')) {
-        rightSidebar.classList.remove('mobile-visible');
+    if (rightSidebar.classList.contains('active')) {
+        rightSidebar.classList.remove('active');
     }
 }
 
@@ -106,11 +106,11 @@ function toggleMobileWordBlocks() {
     const rightSidebar = document.querySelector('.right-sidebar');
 
     // 切换右侧边栏的显示/隐藏
-    rightSidebar.classList.toggle('mobile-visible');
+    rightSidebar.classList.toggle('active');
 
     // 如果左侧边栏是可见的，隐藏它
     const leftSidebar = document.querySelector('.left-sidebar');
-    if (leftSidebar.classList.contains('mobile-visible')) {
-        leftSidebar.classList.remove('mobile-visible');
+    if (leftSidebar.classList.contains('active')) {
+        leftSidebar.classList.remove('active');
     }
 }
