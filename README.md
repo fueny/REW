@@ -47,7 +47,7 @@
 本项目提供两种部署方式：
 
 1. **独立部署**：适用于在新服务器上部署单个应用
-2. **与其他应用共存部署**：适用于在已有其他应用（如memos）的服务器上部署
+2. **与其他应用共存部署**：适用于在已有其他应用和Nginx服务的服务器上部署
 
 ### 独立部署
 
@@ -72,7 +72,7 @@
    # HTTP服务器
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;  # 请替换为您的域名
+       server_name your-domain.com;  # 请替换为您的域名
 
        # 设置较大的客户端请求体大小限制，以支持文件上传
        client_max_body_size 20M;
@@ -123,7 +123,7 @@
    FLASK_PORT=5050
 
    # 域名配置（可选）
-   DOMAIN_NAME=vocabulary.fueny.cn
+   DOMAIN_NAME=your-domain.com
    EOF
    ```
 
@@ -151,11 +151,11 @@
 6. **访问应用**:
    * 打开您的Web浏览器。
    * 访问 `http://localhost:8080` 或 `http://服务器IP:8080`。
-   * 如果您配置了域名，也可以通过域名访问：`http://vocabulary.fueny.cn:8080`。
+   * 如果您配置了域名，也可以通过域名访问：`http://your-domain.com:8080`。
 
 ### 与其他应用共存部署（使用外部Nginx反向代理）
 
-如果您的服务器上已经有其他应用（如memos）和Nginx运行，您可以使用以下步骤部署REW项目：
+如果您的服务器上已经有其他应用和Nginx运行，您可以使用以下步骤将REW项目与现有应用共存部署：
 
 1. **按照独立部署的步骤1-4部署Docker容器**
 
@@ -164,28 +164,26 @@
    # 如果Nginx运行在Docker容器中，查找配置目录的挂载点
    docker inspect nginx | grep -A 10 Mounts
 
-   # 例如，配置目录可能挂载在 /opt/dockers/nginx/conf 或类似位置
+   # 配置目录通常挂载在类似 /etc/nginx/conf.d 或自定义目录
    ```
 
 3. **创建Nginx反向代理配置**:
    ```bash
-   # 假设Nginx配置目录在 /opt/dockers/nginx/conf
-   cat > /opt/dockers/nginx/conf/vocabulary.conf << EOF
+   # 将以下配置保存到Nginx配置目录中的vocabulary.conf文件
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;  # 替换为您的域名
        location / {
            proxy_pass http://vocabulary-app:5050;
-           proxy_set_header Host \$host;
-           proxy_set_header X-Real-IP \$remote_addr;
-           proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto \$scheme;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
 
            # 增加上传文件大小限制
            client_max_body_size 20M;
        }
    }
-   EOF
    ```
 
 4. **将Nginx容器连接到REW项目网络**:
@@ -205,7 +203,7 @@
 
 6. **访问应用**:
    * 打开您的Web浏览器。
-   * 通过域名访问：`http://vocabulary.fueny.cn`。
+   * 通过域名访问：`http://your-domain.com`。
 
 7. **如果无法通过容器名访问，使用IP地址**:
 
@@ -217,22 +215,21 @@
    echo $VOCABULARY_IP
 
    # 修改Nginx配置使用IP地址
-   cat > /opt/dockers/nginx/conf/vocabulary.conf << EOF
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;  # 替换为您的域名
        location / {
-           proxy_pass http://$VOCABULARY_IP:5050;
-           proxy_set_header Host \$host;
-           proxy_set_header X-Real-IP \$remote_addr;
-           proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto \$scheme;
+           proxy_pass http://[容器IP地址]:5050;  # 替换为实际IP地址
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
 
            # 增加上传文件大小限制
            client_max_body_size 20M;
        }
    }
-   EOF
+   ```
 
    # 重新加载Nginx配置
    docker exec nginx nginx -s reload
@@ -325,7 +322,7 @@ REW/
    sudo apt install -y certbot
 
    # 获取证书
-   sudo certbot certonly --standalone -d vocabulary.fueny.cn
+   sudo certbot certonly --standalone -d your-domain.com
    ```
 
 3. **创建SSL目录并配置Nginx**：
@@ -334,8 +331,8 @@ REW/
    mkdir -p nginx/ssl
 
    # 复制证书文件
-   sudo cp /etc/letsencrypt/live/vocabulary.fueny.cn/fullchain.pem nginx/ssl/
-   sudo cp /etc/letsencrypt/live/vocabulary.fueny.cn/privkey.pem nginx/ssl/
+   sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem nginx/ssl/
+   sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem nginx/ssl/
 
    # 设置权限
    sudo chmod 755 nginx/ssl
@@ -346,7 +343,7 @@ REW/
    # HTTP服务器 - 重定向到HTTPS
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;  # 请替换为您的域名
+       server_name your-domain.com;  # 请替换为您的域名
 
        # 将所有HTTP请求重定向到HTTPS
        location / {
@@ -357,7 +354,7 @@ REW/
    # HTTPS服务器
    server {
        listen 443 ssl;
-       server_name vocabulary.fueny.cn;  # 请替换为您的域名
+       server_name your-domain.com;  # 请替换为您的域名
 
        # SSL证书配置
        ssl_certificate /etc/nginx/ssl/fullchain.pem;
@@ -420,10 +417,10 @@ REW/
    sudo chmod -R 755 /var/www/html
 
    # 修改Nginx配置，添加验证路径
-   cat > /opt/dockers/nginx/conf/vocabulary.conf << EOF
+   # 将以下配置保存到Nginx配置目录中的vocabulary.conf文件
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;
 
        # 添加Let's Encrypt验证路径
        location /.well-known/acme-challenge/ {
@@ -447,16 +444,16 @@ REW/
    docker exec nginx nginx -s reload
 
    # 获取证书
-   sudo certbot certonly --webroot -w /var/www/html -d vocabulary.fueny.cn
+   sudo certbot certonly --webroot -w /var/www/html -d your-domain.com
    ```
 
 2. **配置HTTPS**：
    ```bash
    # 修改Nginx配置
-   cat > /opt/dockers/nginx/conf/vocabulary.conf << EOF
+   # 将以下配置保存到Nginx配置目录中的vocabulary.conf文件
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;
 
        # 重定向到HTTPS
        location / {
@@ -471,11 +468,11 @@ REW/
 
    server {
        listen 443 ssl;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;
 
        # SSL证书配置
-       ssl_certificate /etc/letsencrypt/live/vocabulary.fueny.cn/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/vocabulary.fueny.cn/privkey.pem;
+       ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
 
        # SSL配置
        ssl_protocols TLSv1.2 TLSv1.3;
@@ -620,7 +617,7 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
      -keyout nginx/ssl/privkey.pem \
      -out nginx/ssl/fullchain.pem \
-     -subj "/CN=vocabulary.fueny.cn"
+     -subj "/CN=your-domain.com"
    ```
 2. 或者修改Nginx配置，禁用HTTPS：
    ```bash
@@ -631,7 +628,7 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
    cat > nginx/conf.d/app.conf << EOF
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;
 
        # 设置较大的客户端请求体大小限制，以支持文件上传
        client_max_body_size 20M;
@@ -668,7 +665,7 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
 
 ### 5. 在已有Nginx服务器上配置反向代理
 
-**问题**：如何在已有Nginx服务器上配置反向代理，将vocabulary.fueny.cn域名指向REW应用？
+**问题**：如何在已有Nginx服务器上配置反向代理，将您的域名指向REW应用？
 
 **解决方案**：
 1. 检查Nginx配置目录：
@@ -684,11 +681,10 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
 
 3. 创建配置文件并放在正确的目录中：
    ```bash
-   # 假设配置目录挂载在/opt/dockers/memos/nginx/conf
-   cat > /opt/dockers/memos/nginx/conf/vocabulary.conf << EOF
+   # 将以下配置保存到您的Nginx配置目录中的vocabulary.conf文件
    server {
        listen 80;
-       server_name vocabulary.fueny.cn;
+       server_name your-domain.com;
        location / {
            proxy_pass http://vocabulary-app:5050;
            proxy_set_header Host \$host;
@@ -697,7 +693,6 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
            proxy_set_header X-Forwarded-Proto \$scheme;
        }
    }
-   EOF
    ```
 
 4. 重新加载Nginx配置：
@@ -731,7 +726,7 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
    FLASK_PORT=5050
 
    # 域名配置
-   DOMAIN_NAME=vocabulary.fueny.cn
+   DOMAIN_NAME=your-domain.com
    EOF
 
    # 重启容器
@@ -741,7 +736,7 @@ cannot load certificate "/etc/nginx/ssl/fullchain.pem": BIO_new_file() failed
 
 ### 7. 配置HTTPS
 
-如果您需要为vocabulary.fueny.cn配置HTTPS，请参考[HTTPS配置指南.md](HTTPS配置指南.md)文件。
+如果您需要为您的域名配置HTTPS，请参考[HTTPS配置指南.md](HTTPS配置指南.md)文件。
 
 ## 服务器部署建议
 
